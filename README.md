@@ -96,6 +96,53 @@ $app->post('/api/myEndPoint',function ($req, $res, $args) {
 $app->run();
 ```
 
+### Accessing the token pair in templates (Twig, etc)
+
+In many situations, you will want to access the token pair without needing to go through the request object.  In these cases, you can use `getTokenName()` and `getTokenValue()` directly on the `Guard` middleware instance.  This can be useful, for example in a [Twig extension](http://twig.sensiolabs.org/doc/advanced.html#creating-an-extension):
+
+```php
+class CsrfExtension extends \Twig_Extension
+{
+
+    /**
+     * @var \Slim\Csrf\Guard
+     */
+    protected $csrf;
+    
+    public function __construct(\Slim\Csrf\Guard $csrf)
+    {
+        $this->csrf = $csrf;
+    }
+
+    public function getGlobals()
+    {
+        // CSRF token name and value
+        $csrfNameKey = $this->csrf->getTokenNameKey();
+        $csrfValueKey = $this->csrf->getTokenValueKey();
+        $csrfName = $this->csrf->getTokenName();
+        $csrfValue = $this->csrf->getTokenValue();
+        
+        return [
+            'csrf'   => [
+                'keys' => [
+                    'name'  => $csrfNameKey,
+                    'value' => $csrfValueKey
+                ],
+                'name'  => $csrfName,
+                'value' => $csrfValue
+            ]
+        ];
+    }
+}
+```
+
+Once you have registered your extension, you may access the token pair in any template:
+
+```twig
+<input type="hidden" name="{{csrf.keys.name}}" value="{{csrf.name}}">
+<input type="hidden" name="{{csrf.keys.value}}" value="{{csrf.value}}">
+```
+
 ## Token persistence
 
 By default, `Slim\Csrf\Guard` will generate a fresh name/value pair after each request.  This is an important security measure for [certain situations](http://blog.ircmaxell.com/2013/02/preventing-csrf-attacks.html).  However, in many cases this is unnecessary, and [a single token throughout the user's session will suffice](https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet#Synchronizer_.28CSRF.29_Tokens).  By using per-session requests it becomes easier, for example, to process AJAX requests without having to retrieve a new CSRF token (by reloading the page or making a separate request) after each request.  See issue #49.
