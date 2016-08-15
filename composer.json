@@ -1,5 +1,5 @@
 {
-    "name": "slim/csrf",
+    "name": "alexweissman/slim-csrf",
     "type": "library",
     "description": "Slim Framework 3 CSRF protection middleware",
     "keywords": ["slim","framework","middleware","csrf"],
